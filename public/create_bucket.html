@@ -91,6 +91,11 @@
         </div>
     </form>
     <button type="button" onclick="finalResult()">Show Result</button>
+    <button type="button" onclick="resetData()">Clear Data</button>
+
+    <div id="dataClearSuccess" style="color: green; display: none;">
+        <!-- Success messages for both forms will be displayed here -->
+    </div>
 
     <div id="successMessage" style="color: green; display: none;">
         <!-- Success messages for both forms will be displayed here -->
@@ -267,6 +272,21 @@
                 });
             } catch (error) {
                 console.error('Error fetching balls:', error);
+            }
+        }
+
+        async function resetData() {
+            try {
+                await fetch('http://localhost:3000/deleteBuckets', {
+                    method: 'DELETE',
+                });
+                await fetch('http://localhost:3000/deleteBalls', {
+                    method: 'DELETE',
+                });
+                document.getElementById('dataClearSuccess').innerText = 'Data cleared successfully!';
+                document.getElementById('dataClearSuccess').style.display = 'block';
+            } catch (err) {
+                console.log(err);
             }
         }
     </script>

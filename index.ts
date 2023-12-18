@@ -96,3 +96,28 @@ app.get('/getBuckets', async (req, res) => {
     }
 });
 
+// Delete Buckets
+app.delete('/deleteBuckets', async (req, res) => {
+    try {
+        await bucket.deleteMany().then(() => {
+            res.status(200).send({ msg: "All buckets have been deleted" })
+        }).catch(error => {
+            res.status(400).send({ msg: "Unable to delete all buckets." })
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Delete Buckets
+app.delete('/deleteBalls', async (req, res) => {
+    try {
+        await ball.deleteMany().then(() => {
+            res.status(200).send({ msg: "All balls have been deleted" })
+        }).catch(error => {
+            res.status(400).send({ msg: "Unable to delete all balls." })
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
