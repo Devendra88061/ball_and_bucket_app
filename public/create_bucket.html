@@ -1,0 +1,214 @@
+<!-- create_bucket.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Bucket</title>
+    <style>
+        body {
+            margin: 20px;
+            /* Add margin to the body for general spacing */
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            /* Add margin below h2 headings */
+        }
+
+        form {
+            margin-bottom: 20px;
+            /* Add margin below each form */
+            border: 2px solid #333;
+            /* Add a 2px solid border around each form */
+            padding: 20px;
+            /* Add padding inside each form for spacing */
+            border-radius: 10px;
+            /* Add border-radius for rounded corners */
+        }
+
+        label,
+        input {
+            margin-bottom: 10px;
+            /* Add margin below labels and inputs */
+        }
+
+        #successMessage {
+            margin-top: 20px;
+            /* Add margin above the success message */
+            color: green;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Create Bucket</h2>
+    <form id="bucketForm">
+        <label for="bucketName">Bucket Name:</label>
+        <input type="text" id="bucketName" name="bucketName" required><br>
+
+        <label for="volume">Volume:</label>
+        <input type="number" id="volume" name="volume" required><br>
+
+        <button type="button" onclick="createBucket()">Create Bucket</button>
+    </form>
+
+    <h2>Create Ball</h2>
+    <form id="ballForm">
+        <label for="ballColor">Ball Color:</label>
+        <input type="text" id="ballColor" name="ballColor" required><br>
+
+        <label for="ballSize">Ball Size (in cubic inches):</label>
+        <input type="number" id="ballSize" name="ballSize" required><br>
+
+        <button type="button" onclick="createBall()">Create Ball</button>
+    </form>
+
+    <div id="successMessage" style="color: green; display: none;">
+        <!-- Success messages for both forms will be displayed here -->
+    </div>
+
+    <h2>Bucket Suggestion Form</h2>
+    <button type="button" onclick="fetchBalls()">Suggest Buckets</button>
+    <form id="bucketSuggestionForm">
+        <div id="ballsInput">
+        </div>
+    </form>
+    <button type="submit">Submit</button>
+
+    <div id="successMessage" style="color: green; display: none;">
+        <!-- Success messages for both forms will be displayed here -->
+    </div>
+
+    <h2>Final Reslut</h2>
+    <form id="result">
+        <div id="resultInput">
+        </div>
+    </form>
+    <button type="button" onclick="finalResult()">Show Result</button>
+
+    <div id="successMessage" style="color: green; display: none;">
+        <!-- Success messages for both forms will be displayed here -->
+    </div>
+   
+    <script>
+        async function createBucket() {
+            const bucketName = document.getElementById('bucketName').value;
+            const volume = document.getElementById('volume').value;
+            try {
+                const response = await fetch('http://localhost:3000/buckets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: bucketName, volume: parseInt(volume) }),
+                });
+                const result = await response.json();
+                console.log('Bucket created successfully:', result);
+
+                // Display success message
+                document.getElementById('successMessage').innerText = 'Bucket created successfully!';
+                document.getElementById('successMessage').style.display = 'block';
+            } catch (error) {
+                console.error('Error creating bucket:', error);
+            }
+        }
+
+        async function createBall() {
+            const ballColor = document.getElementById('ballColor').value;
+            const ballSize = document.getElementById('ballSize').value;
+            try {
+                const response = await fetch('http://localhost:3000/balls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ color: ballColor, size: parseInt(ballSize) }),
+                });
+                const result = await response.json();
+                console.log('Ball created successfully:', result);
+
+                // Display success message
+                document.getElementById('successMessage').innerText = 'Ball created successfully!';
+                document.getElementById('successMessage').style.display = 'block';
+            } catch (error) {
+                console.error('Error creating ball:', error);
+            }
+        }
+        async function fetchBalls() {
+            try {
+                const response = await fetch('http://localhost:3000/balls');
+                const balls = await response.json();
+                const ballsInput = document.getElementById('ballsInput');
+
+                balls.data.forEach(ball => {
+                    const label = document.createElement('label');
+                    label.innerText = `${ball.color}:`;
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = ball.color;
+                    input.id = ball.color;
+                    input.min = 0;
+
+                    ballsInput.appendChild(label);
+                    ballsInput.appendChild(input);
+                    ballsInput.appendChild(document.createElement('br'));
+                });
+            } catch (error) {
+                console.error('Error fetching balls:', error);
+            }
+        }
+
+        document.querySelector("#bucketSuggestionForm").addEventListener("submit", async function (e) {
+            try {
+                e.preventDefault();
+                const response = await fetch('http://localhost:3000/balls');
+                const balls = await response.json();
+                const ballsInput = document.getElementById('ballsInput');
+                const finalArray = [];
+                balls.data.forEach(ball => {
+                    finalArray.push(ball);
+                })
+                console.log("finalArray--1", finalArray);
+                finalArray.forEach(ball => {
+                    ball["value"] = parseInt(document.getElementById(ball.color).value);
+                });
+            } catch (error) {
+                console.error('Error fetching balls:', error);
+            }
+        });
+
+        async function finalResult() {
+            try {
+                const response = await fetch('http://localhost:3000/getBuckets');
+                const buckets = await response.json();
+                console.log("buckets---", buckets);
+                const resultInput = document.getElementById('resultInput');
+
+                buckets.data.forEach(buckets => {
+                    const label = document.createElement('label');
+                    label.innerText = `${buckets.name}:`;
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = buckets.name;
+                    input.id = buckets.name;
+                    input.min = 0;
+
+                    resultInput.appendChild(label);
+                    resultInput.appendChild(input);
+                    resultInput.appendChild(document.createElement('br'));
+
+                    // Todo;
+                });
+            } catch (error) {
+                console.error('Error fetching balls:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
