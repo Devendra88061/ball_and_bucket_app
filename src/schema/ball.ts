@@ -11,6 +11,5 @@ const ballSchema = new mongoose.Schema({
         required: true,
     },
 });
-// Create the bucket model
 const ball = mongoose.model("ball", ballSchema);
 export default ball;

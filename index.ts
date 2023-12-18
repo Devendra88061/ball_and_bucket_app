@@ -30,19 +30,16 @@ mongoose.connect(MONGO_URL).then(() => {
 app.post('/buckets', async (req, res) => {
     const { name, volume } = req.body;
     try {
-        const bucketData = await bucket.find({ name: name });
-        if (bucketData) {
-            return res.status(400).json({
-                message: "Bucket already exists"
-            })
-        } else {
-            const newBucket = new bucket({ name, volume });
-            await newBucket.save();
-            res.status(200).json({
-                message: "Bucket created successfully",
-                newBucket
-            });
+        const existingBucket = await bucket.findOne({ name });
+        if (existingBucket) {
+            return res.status(400).json({ error: 'Bucket name already exists' });
         }
+        const newBucket = new bucket({ name, volume });
+        await newBucket.save();
+        res.status(200).json({
+            message: "Bucket created successfully",
+            newBucket
+        });
     } catch (error) {
         console.error('Error creating bucket:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -52,7 +49,7 @@ app.post('/buckets', async (req, res) => {
 // API endpoint for creating a new ball
 app.post('/balls', async (req, res) => {
     const { color, size } = req.body;
-    const ballData = await ball.find({ color: color });
+    const ballData = await ball.findOne({ color });
     try {
         if (ballData) {
             return res.status(400).json({
@@ -98,3 +95,4 @@ app.get('/getBuckets', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+

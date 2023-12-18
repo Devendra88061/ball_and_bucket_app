@@ -54,6 +54,9 @@
 
         <button type="button" onclick="createBucket()">Create Bucket</button>
     </form>
+    <div id="bucketFormSuccess" style="color: green; display: none;">
+        <!-- Success messages for both forms will be displayed here -->
+    </div>
 
     <h2>Create Ball</h2>
     <form id="ballForm">
@@ -65,24 +68,24 @@
 
         <button type="button" onclick="createBall()">Create Ball</button>
     </form>
-
-    <div id="successMessage" style="color: green; display: none;">
+    <div id="ballFormSuccess" style="color: green; display: none;">
         <!-- Success messages for both forms will be displayed here -->
     </div>
+
 
     <h2>Bucket Suggestion Form</h2>
     <button type="button" onclick="fetchBalls()">Suggest Buckets</button>
     <form id="bucketSuggestionForm">
         <div id="ballsInput">
         </div>
+        <button type="submit">Submit</button>
     </form>
-    <button type="submit">Submit</button>
 
     <div id="successMessage" style="color: green; display: none;">
         <!-- Success messages for both forms will be displayed here -->
     </div>
 
-    <h2>Final Reslut</h2>
+    <h2>Final Result</h2>
     <form id="result">
         <div id="resultInput">
         </div>
@@ -92,7 +95,7 @@
     <div id="successMessage" style="color: green; display: none;">
         <!-- Success messages for both forms will be displayed here -->
     </div>
-   
+
     <script>
         async function createBucket() {
             const bucketName = document.getElementById('bucketName').value;
@@ -109,8 +112,8 @@
                 console.log('Bucket created successfully:', result);
 
                 // Display success message
-                document.getElementById('successMessage').innerText = 'Bucket created successfully!';
-                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('bucketFormSuccess').innerText = 'Bucket created successfully!';
+                document.getElementById('bucketFormSuccess').style.display = 'block';
             } catch (error) {
                 console.error('Error creating bucket:', error);
             }
@@ -131,8 +134,8 @@
                 console.log('Ball created successfully:', result);
 
                 // Display success message
-                document.getElementById('successMessage').innerText = 'Ball created successfully!';
-                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('ballFormSuccess').innerText = 'Ball created successfully!';
+                document.getElementById('ballFormSuccess').style.display = 'block';
             } catch (error) {
                 console.error('Error creating ball:', error);
             }
@@ -166,16 +169,76 @@
             try {
                 e.preventDefault();
                 const response = await fetch('http://localhost:3000/balls');
-                const balls = await response.json();
+                const ballData = await response.json();
                 const ballsInput = document.getElementById('ballsInput');
-                const finalArray = [];
-                balls.data.forEach(ball => {
-                    finalArray.push(ball);
+                const balls = [];
+                ballData.data.forEach(ball => {
+                    balls.push(ball);
                 })
-                console.log("finalArray--1", finalArray);
-                finalArray.forEach(ball => {
+                console.log("finalArray--1", balls);
+                balls.forEach(ball => {
                     ball["value"] = parseInt(document.getElementById(ball.color).value);
                 });
+                // bucket Data
+                const res = await fetch('http://localhost:3000/getBuckets');
+                const bucketData = await res.json();
+                const buckets = bucketData.data;
+                console.log("newBucket---", buckets);
+
+                let bucketResults = {}; // Object to store results for each bucket
+
+                let i = 0; // Index for buckets
+                let j = 0; // Index for balls
+                let currentVolume = 0; // Current volume in the current bucket
+
+                while (i < buckets.length && j < balls.length) {
+                    if (balls[j].value > 0) {
+                        if ((currentVolume + balls[j].size) <= buckets[i].volume) {
+                            currentVolume = currentVolume + balls[j].size;
+                            balls[j].value--;
+                            // Store the count of each type of ball in the current bucket
+                            const ballType = balls[j].color;
+                            if (bucketResults[buckets[i].name]) {
+                                if (bucketResults[buckets[i].name][ballType]) {
+                                    bucketResults[buckets[i].name][ballType]++;
+                                } else {
+                                    bucketResults[buckets[i].name][ballType] = 1;
+                                }
+                            } else {
+                                bucketResults[buckets[i].name] = { [ballType]: 1 };
+                            }
+                        } else {
+                            currentVolume = 0;
+                            i++;
+                        }
+                    } else {
+                        j++;
+                    }
+                }
+
+                // Display the results
+                let mp = new Map();
+                for (const bucketName in bucketResults) {
+                    const counts = bucketResults[bucketName];
+                    const resultString = `${Object.entries(counts).map(([color, count]) => `${count} ${color} Balls`).join(', ')}`;
+                    mp.set(bucketName, resultString)
+                    console.log(resultString);
+                }
+                const resultInput = document.getElementById('resultInput');
+                buckets.forEach(bkt => {
+                    const label = document.createElement('label');
+                    label.innerText = `${bkt.name}:`;
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = bkt.name;
+                    input.value = mp.get(bkt.name);
+
+                    resultInput.appendChild(label);
+                    resultInput.appendChild(input);
+                    resultInput.appendChild(document.createElement('br'));
+                });
+
             } catch (error) {
                 console.error('Error fetching balls:', error);
             }
@@ -201,8 +264,6 @@
                     resultInput.appendChild(label);
                     resultInput.appendChild(input);
                     resultInput.appendChild(document.createElement('br'));
-
-                    // Todo;
                 });
             } catch (error) {
                 console.error('Error fetching balls:', error);

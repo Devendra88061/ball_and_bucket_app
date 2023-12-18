@@ -12,6 +12,5 @@ const BucketSuggestion = new mongoose.Schema({
         required: true,
     },
 });
-// Create the bucket model
 const BucketS = mongoose.model("BucketS", BucketSuggestion);
 export default BucketS;
